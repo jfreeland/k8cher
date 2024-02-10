@@ -1,14 +1,17 @@
+# only run on docker-desktop
+allow_k8s_contexts('docker-desktop')
+
 # allow for remote helm charts
 load('ext://helm_remote', 'helm_remote')
 
 # don't hide secrets for development only environment
-secret_settings ( disable_scrub=True ) 
+secret_settings ( disable_scrub=True )
 
 # Create a local kubernetes secret store. This is only for local development and not secure!!!
 # For production implement a a dapr secret store component (https://docs.dapr.io/reference/components-reference/supported-secret-stores/)
 # such as HashiCorp Vault, Azure Key Vault, GPC Secret Manager, or AWS Secret Manager
 k8s_yaml(local(
-    ["kubectl", "create", "secret", "generic", "secret-store", 
+    ["kubectl", "create", "secret", "generic", "secret-store",
     "--from-literal=pgadmin-password=bouncingcow",
     "--from-literal=pgadmin-emailuser=user@domain.com",
     "--from-literal=pg-host=k8cher-db-postgresql",
@@ -24,7 +27,7 @@ k8s_yaml(local(
     "--from-literal=web-login-redirect=http://localhost:3000/login",
     "--from-literal=web-confirmation-expired=http://localhost:3000/tokenexpired",
     "-o=yaml", "--dry-run=client"]
-    )) 
+    ))
 
 # Proxy for incoming traffic
 include('./src/k8cher.proxy/Tiltfile')
@@ -44,7 +47,11 @@ include('./src/maildev/Tiltfile')
 
 # Dapr
 helm_remote('dapr', release_name='dapr', repo_name='dapr', repo_url='https://dapr.github.io/helm-charts/')
-k8s_resource('dapr-dashboard', port_forwards=[port_forward(8080, 8080, name='dapr dashboard')], labels=['dapr'])
+#k8s_resource('dapr-dashboard', resource_deps=['dapr-operator'], port_forwards=[port_forward(8080, 8080, name='dapr dashboard')], labels=['dapr'])
+#k8s_resource('dapr-operator', resource_deps['dapr'], labels=['dapr'])
+#k8s_resource('dapr-sentry', resource_deps['dapr'], labels=['dapr'])
+#k8s_resource('dapr-placement-server', resource_deps['dapr'], labels=['dapr'])
+#k8s_resource('dapr-sidecar-injector', resource_deps['dapr'], labels=['dapr'])
 k8s_resource('dapr-operator', labels=['dapr'])
 k8s_resource('dapr-sentry', labels=['dapr'])
 k8s_resource('dapr-placement-server', labels=['dapr'])

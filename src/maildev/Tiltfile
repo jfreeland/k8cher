@@ -12,6 +12,6 @@ k8s_yaml(yaml)
 
 k8s_resource(
     'maildev-service-chart',
-    port_forwards=[port_forward(1080, 80, name='maildev')],
+    port_forwards=[port_forward(1080, 1080, name='maildev')],
     labels=['mail']
     )
